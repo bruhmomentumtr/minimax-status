@@ -8,7 +8,7 @@ const httpsAgent = new https.Agent({
   maxSockets: 5,
   maxFreeSockets: 2,
   timeout: 10000,
-  servername: "minimaxi.com",
+  servername: "minimax.io",
 });
 
 class MinimaxAPI {
@@ -24,20 +24,16 @@ class MinimaxAPI {
     this.token = config.get("token");
     this.groupId = config.get("groupId");
     this.selectedModelName = config.get("modelName");
-    // Load overseas configuration
-    this.overseasToken = config.get("overseasToken");
-    this.overseasGroupId = config.get("overseasGroupId");
-    this.overseasDisplay = config.get("overseasDisplay") || "none";
   }
 
   async getUsageStatus() {
     if (!this.token) {
-      throw new Error("请在设置中配置 MiniMax 访问令牌");
+      throw new Error("Please configure MiniMax access token in settings");
     }
 
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/v1/token_plan/remains`,
+        `https://www.minimax.io/v1/token_plan/remains`,
         {
           headers: {
             Authorization: `Bearer ${this.token}`,
@@ -50,46 +46,20 @@ class MinimaxAPI {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        throw new Error("无效的令牌或未授权。请检查您的凭据。");
+        throw new Error("Invalid or unauthorized token. Please check your credentials.");
       }
-      throw new Error(`API 请求失败: ${error.message}`);
-    }
-  }
-
-  async getOverseasUsageStatus() {
-    if (!this.overseasToken || !this.overseasGroupId) {
-      throw new Error("请在设置中配置海外 API Key 和 Group ID");
-    }
-
-    try {
-      const response = await axios.get(
-        `https://www.minimax.io/v1/token_plan/remains`,
-        {
-          params: { GroupId: this.overseasGroupId },
-          headers: {
-            Authorization: `Bearer ${this.overseasToken}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        throw new Error("无效的令牌或未授权。请检查您的凭据。");
-      }
-      throw new Error(`海外 API 请求失败: ${error.message}`);
+      throw new Error(`API request failed: ${error.message}`);
     }
   }
 
   async getSubscriptionDetails() {
     if (!this.token) {
-      throw new Error("请在设置中配置 MiniMax 访问令牌");
+      throw new Error("Please configure MiniMax access token in settings");
     }
 
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/v1/api/openplatform/charge/combo/cycle_audio_resource_package`,
+        `https://www.minimax.io/v1/api/openplatform/charge/combo/cycle_audio_resource_package`,
         {
           params: {
             biz_line: 2,
@@ -107,9 +77,9 @@ class MinimaxAPI {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        throw new Error("无效的令牌或未授权。请检查您的凭据。");
+        throw new Error("Invalid or unauthorized token. Please check your credentials.");
       }
-      throw new Error(`API 请求失败: ${error.message}`);
+      throw new Error(`API request failed: ${error.message}`);
     }
   }
 
@@ -121,12 +91,12 @@ class MinimaxAPI {
    */
   async getBillingRecords(page = 1, limit = 100) {
     if (!this.token) {
-      throw new Error("请在设置中配置 MiniMax 访问令牌");
+      throw new Error("Please configure MiniMax access token in settings");
     }
 
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/account/amount`,
+        `https://www.minimax.io/account/amount`,
         {
           params: {
             page: page,
@@ -144,9 +114,9 @@ class MinimaxAPI {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        throw new Error("无效的令牌或未授权。请检查您的凭据。");
+        throw new Error("Invalid or unauthorized token. Please check your credentials.");
       }
-      throw new Error(`账单 API 请求失败: ${error.message}`);
+      throw new Error(`Billing API request failed: ${error.message}`);
     }
   }
 
@@ -160,13 +130,13 @@ class MinimaxAPI {
   calculateUsageStats(records, planStartTime, planEndTime) {
     const now = Date.now();
 
-    // 账单记录是秒级时间戳，需要统一转换为毫秒
-    // 套餐时间戳本身是毫秒级
+    // Billing records use second-level timestamps, convert to milliseconds
+    // Plan timestamps are already in milliseconds
     const planStartMs = planStartTime;
     const planEndMs = planEndTime;
 
-    // 昨日（0点到现在）或者取最近一次账单的日期
-    // 账单记录不是实时的，当日消耗要明天才显示，所以显示"昨日"
+    // Yesterday (from 0:00 to now) or last billing record date
+    // Billing records are not real-time, today's usage shows tomorrow
     const todayStart = new Date().setHours(0, 0, 0, 0);
     const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
     const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -179,20 +149,20 @@ class MinimaxAPI {
 
     for (const record of records) {
       const tokens = parseInt(record.consume_token, 10) || 0;
-      // 账单记录的 created_at 是秒级时间戳，转换为毫秒
+      // Billing record created_at is second-level timestamp, convert to milliseconds
       const createdAt = (record.created_at || 0) * 1000;
 
-      // 昨日消耗（从昨日0点到现在）
+      // Yesterday's usage (from yesterday 0:00 to now)
       if (createdAt >= yesterdayStart && createdAt < todayStart) {
         stats.lastDayUsage += tokens;
       }
 
-      // 近7天消耗
+      // Last 7 days usage
       if (createdAt >= weekAgo) {
         stats.weeklyUsage += tokens;
       }
 
-      // 当月消耗
+      // This month's usage
       if (createdAt >= planStartMs && createdAt <= planEndMs) {
         stats.planTotalUsage += tokens;
       }
@@ -202,18 +172,18 @@ class MinimaxAPI {
   }
 
   /**
-   * Format number to human readable format (万, 亿)
+   * Format number to human readable format (10k, 100M)
    * @param {number} num - Number to format
    * @returns {string} Formatted string
    */
   formatNumber(num) {
     if (num >= 100000000) {
-      return (num / 100000000).toFixed(1).replace(/\.0$/, "") + "亿";
+      return (num / 100000000).toFixed(1).replace(/\.0$/, "") + "00M";
     }
     if (num >= 10000) {
-      return (num / 10000).toFixed(1).replace(/\.0$/, "") + "万";
+      return (num / 10000).toFixed(1).replace(/\.0$/, "") + "0K";
     }
-    return num.toLocaleString("zh-CN");
+    return num.toLocaleString();
   }
 
   /**
@@ -236,7 +206,7 @@ class MinimaxAPI {
 
         allRecords.push(...records);
 
-        // 如果传入了时间范围，检查是否需要继续获取
+        // If time range is provided, check if we should continue fetching
         if (minStartTime > 0) {
           const lastRecord = records[records.length - 1];
           const lastRecordTime = (lastRecord.created_at || 0) * 1000;
@@ -278,9 +248,9 @@ class MinimaxAPI {
       })
       .map(m => {
         const totalCount = m.current_interval_total_count;
-        // 新接口 usage_count 是已使用次数（正确值）
+        // New interface usage_count is the used count (correct value)
         const usedCount = m.current_interval_usage_count;
-        // percentage = 已使用 / 总量
+        // percentage = used / total
         const percentage = totalCount > 0 ? Math.round((usedCount / totalCount) * 100) : 0;
 
         // Calculate remaining time
@@ -288,7 +258,7 @@ class MinimaxAPI {
         const hours = Math.floor(remainingMs / (1000 * 60 * 60));
         const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-        // Weekly data - 新接口 weekly_usage_count 是已使用次数
+        // Weekly data - new interface weekly_usage_count is the used count
         const weeklyTotal = m.current_weekly_total_count || 0;
         const weeklyUsed = m.current_weekly_usage_count || 0;
         const weeklyPercentage = weeklyTotal > 0 ? Math.round((weeklyUsed / weeklyTotal) * 100) : 0;
@@ -301,13 +271,13 @@ class MinimaxAPI {
         const isTextModel = modelName.includes('MiniMax-M');
         const isTTSModel = modelName.includes('speech');
 
-        // Status: usedCount >= totalCount 表示已用完
+        // Status: usedCount >= totalCount means exhausted
         const isExhausted = usedCount >= totalCount;
-        const isOverLimit = false; // 剩余次数不会超限
+        const isOverLimit = false; // Remaining count won't exceed limit
         const weeklyUnlimited = weeklyTotal === 0;
 
-        // 小额度模型（日配额较小）：Hailuo、music、image
-        // 这些模型日配额用完后第二天重置，周限额不需要显示
+        // Small quota models (daily quota is small): Hailuo, music, image
+        // These models reset daily, weekly quota not needed
         const isSmallQuotaModel = modelName.includes('Hailuo') ||
                                    modelName.includes('music') ||
                                    modelName.includes('image');
@@ -329,25 +299,25 @@ class MinimaxAPI {
           // Current interval (5h window for text, daily for others)
           totalCount,
           usedCount,
-          remainingCount: totalCount - usedCount, // 剩余 = 总量 - 已使用
+          remainingCount: totalCount - usedCount, // remaining = total - used
           percentage,
           remainingTime: {
             hours,
             minutes,
-            text: hours > 0 ? `${hours} 小时 ${minutes} 分钟后重置` : `${minutes} 分钟后重置`,
+            text: hours > 0 ? `${hours} hours ${minutes} minutes until reset` : `${minutes} minutes until reset`,
           },
-          // Time window (统一使用 Date 对象，避免时区问题)
+          // Time window (use Date objects to avoid timezone issues)
           startTime: new Date(m.start_time),
           endTime: new Date(m.end_time),
           // Weekly quota
           weeklyTotal,
           weeklyUsed,
-          weeklyRemainingCount: weeklyTotal - weeklyUsed, // 剩余 = 总量 - 已使用
+          weeklyRemainingCount: weeklyTotal - weeklyUsed, // remaining = total - used
           weeklyPercentage,
           weeklyRemainingTime: {
             days: weeklyDays,
             hours: weeklyHours,
-            text: weeklyDays > 0 ? `${weeklyDays} 天 ${weeklyHours} 小时后重置` : `${weeklyHours} 小时后重置`,
+            text: weeklyDays > 0 ? `${weeklyDays} days ${weeklyHours} hours until reset` : `${weeklyHours} hours until reset`,
           },
           // Status
           isExhausted,
@@ -371,7 +341,7 @@ class MinimaxAPI {
 
   parseUsageData(apiData, subscriptionData) {
     if (!apiData.model_remains || apiData.model_remains.length === 0) {
-      throw new Error("没有可用的使用数据");
+      throw new Error("No usage data available");
     }
 
     // Parse all available models
@@ -379,12 +349,12 @@ class MinimaxAPI {
       name: m.model_name,
       startTime: new Date(m.start_time),
       endTime: new Date(m.end_time),
-      usage: m.current_interval_usage_count, // 新接口直接是已使用次数
+      usage: m.current_interval_usage_count, // new interface is directly the used count
       total: m.current_interval_total_count,
       remainingMs: m.remains_time,
       // Weekly data
       weeklyTotal: m.current_weekly_total_count,
-      weeklyUsage: m.current_weekly_usage_count, // 新接口直接是已使用次数
+      weeklyUsage: m.current_weekly_usage_count, // new interface is directly the used count
       weeklyStartTime: new Date(m.weekly_start_time),
       weeklyEndTime: new Date(m.weekly_end_time),
       weeklyRemainsTime: m.weekly_remains_time,
@@ -408,7 +378,7 @@ class MinimaxAPI {
     const startTime = new Date(modelData.start_time);
     const endTime = new Date(modelData.end_time);
 
-    // Calculate used percentage based on usage count (新接口 usage_count 是已使用次数)
+    // Calculate used percentage based on usage count (new interface usage_count is the used count)
     const used = modelData.current_interval_usage_count;
     const total = modelData.current_interval_total_count;
     const usedPercentage = Math.round((used / total) * 100);
@@ -418,7 +388,7 @@ class MinimaxAPI {
     const hours = Math.floor(remainingMs / (1000 * 60 * 60));
     const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    // Calculate weekly usage data (新接口 weekly_usage_count 是已使用次数)
+    // Calculate weekly usage data (new interface weekly_usage_count is the used count)
     const weeklyUsed = modelData.current_weekly_usage_count;
     const weeklyTotal = modelData.current_weekly_total_count;
     const weeklyPercentage = weeklyTotal > 0 ? Math.floor((weeklyUsed / weeklyTotal) * 100) : 0;
@@ -451,21 +421,21 @@ class MinimaxAPI {
         daysRemaining: daysDiff,
         text:
           daysDiff > 0
-            ? `还剩 ${daysDiff} 天`
+            ? `${daysDiff} days remaining`
             : daysDiff === 0
-            ? "今天到期"
-            : `已过期 ${Math.abs(daysDiff)} 天`,
+            ? "expires today"
+            : `expired ${Math.abs(daysDiff)} days ago`,
       };
 
-      // 套餐有效期结束时间
+      // Plan validity end time
       planEndFormatted = expiryDate;
 
-      // 套餐有效期开始时间：取订阅开始时间或计算得出
+      // Plan validity start time: from subscription start time or calculated
       if (subscriptionData.current_subscribe.current_credit_reload_time) {
         planStartFormatted = subscriptionData.current_subscribe.current_credit_reload_time;
       } else {
-        // 如果没有开始时间，显示"当前周期"
-        planStartFormatted = "当前周期";
+        // If no start time, show "current cycle"
+        planStartFormatted = "current cycle";
       }
     }
 
@@ -475,8 +445,8 @@ class MinimaxAPI {
       planTimeWindow: {
         start: modelData.start_time,
         end: modelData.end_time,
-        startFormatted: planStartFormatted || startTime.toLocaleDateString("zh-CN"),
-        endFormatted: planEndFormatted || endTime.toLocaleDateString("zh-CN"),
+        startFormatted: planStartFormatted || startTime.toLocaleDateString(),
+        endFormatted: planEndFormatted || endTime.toLocaleDateString(),
       },
       timeWindow: {
         start: startTime.toLocaleTimeString("zh-CN", {
@@ -498,8 +468,8 @@ class MinimaxAPI {
         minutes,
         text:
           hours > 0
-            ? `${hours} 小时 ${minutes} 分钟后重置`
-            : `${minutes} 分钟后重置`,
+            ? `${hours} hours ${minutes} minutes until reset`
+            : `${minutes} minutes until reset`,
       },
       usage: {
         used:
@@ -516,8 +486,8 @@ class MinimaxAPI {
         hours: weeklyHours,
         unlimited: weeklyUnlimited,
         text: weeklyDays > 0
-          ? `${weeklyDays} 天 ${weeklyHours} 小时后重置`
-          : `${weeklyHours} 小时后重置`,
+          ? `${weeklyDays} days ${weeklyHours} hours until reset`
+          : `${weeklyHours} hours until reset`,
       },
       expiry: expiryInfo,
     };

@@ -9,7 +9,7 @@ class PromptStatus {
   }
 
   async loadSettings() {
-    // 尝试从各种位置加载 settings.json
+    // Try loading settings.json from various locations
     const possiblePaths = [
       path.join(
         process.env.HOME || process.env.USERPROFILE,

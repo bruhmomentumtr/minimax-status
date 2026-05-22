@@ -11,7 +11,7 @@ const httpsAgent = new https.Agent({
   maxSockets: 5,
   maxFreeSockets: 2,
   timeout: 10000,
-  servername: 'minimaxi.com'
+ servername: 'minimax.io'
 });
 
 class MinimaxAPI {
@@ -81,7 +81,7 @@ class MinimaxAPI {
 
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/v1/token_plan/remains`,
+        `https://www.minimax.io/v1/token_plan/remains`,
         {
           headers: {
             Authorization: `Bearer ${this.token}`,
@@ -118,7 +118,7 @@ class MinimaxAPI {
   async getSubscriptionDetails() {
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/v1/api/openplatform/charge/combo/cycle_audio_resource_package`,
+        `https://www.minimax.io/v1/api/openplatform/charge/combo/cycle_audio_resource_package`,
         {
           params: {
             biz_line: 2,
@@ -150,7 +150,7 @@ class MinimaxAPI {
   async getBillingRecords(page = 1, limit = 100) {
     try {
       const response = await axios.get(
-        `https://www.minimaxi.com/account/amount`,
+        `https://www.minimax.io/account/amount`,
         {
           params: {
             page: page,
@@ -339,10 +339,10 @@ class MinimaxAPI {
         daysRemaining: daysDiff,
         text:
           daysDiff > 0
-            ? `还剩 ${daysDiff} 天`
+            ? `${daysDiff} days left`
             : daysDiff === 0
-            ? "今天到期"
-            : `已过期 ${Math.abs(daysDiff)} 天`,
+            ? "expires today"
+            : `expired ${Math.abs(daysDiff)} days ago`,
       };
     }
 
@@ -380,8 +380,8 @@ class MinimaxAPI {
         minutes,
         text:
           hours > 0
-            ? `${hours} 小时 ${minutes} 分钟后重置`
-            : `${minutes} 分钟后重置`,
+            ? `${hours} hours ${minutes} minutes until reset`
+            : `${minutes} minutes until reset`,
       },
       usage: {
         used: usedCount,
@@ -397,8 +397,8 @@ class MinimaxAPI {
         hours: weeklyHours,
         unlimited: weeklyTotal === 0,
         text: weeklyDays > 0
-          ? `${weeklyDays} 天 ${weeklyHours} 小时后重置`
-          : `${weeklyHours} 小时后重置`,
+          ? `${weeklyDays} days ${weeklyHours} hours until reset`
+          : `${weeklyHours} hours until reset`,
       },
       contextWindow,
       expiry: expiryInfo,

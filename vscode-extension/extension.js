@@ -1,6 +1,178 @@
 const vscode = require("vscode");
 const MinimaxAPI = require("./api");
 
+// ── i18n: all hardcoded strings in one place ──────────────────────────────
+const i18n = {
+  "tr-TR": {
+    // Tree view
+    tokenUsageStats: "Token Kullanım İstatistikleri",
+    yesterday: "Dün",
+    last7Days: "Son 7 Gün",
+    thisMonth: "Bu Ay",
+    settings: "Ayarlar",
+    help: "Yardım",
+    openSettings: "Ayarları Aç",
+    viewHelp: "Yardımı Görüntüle",
+    // Status bar
+    needsConfiguration: "MiniMax: Yapılandırma Gerekli",
+    clickToConfigure: "MiniMax Durumu yapılandırmak için tıklayın",
+    loading: "⏳ MiniMax: Yükleniyor...",
+    fetchingStatus: "MiniMax Durum\nDurum alınıyor...",
+    // Welcome message
+    welcomeTitle: "MiniMax Durum'a Hoşgeldiniz!",
+    welcomeMessage: "Başlamak için erişim tokenınızı yapılandırın.",
+    configureNow: "Şimdi Yapılandır",
+    later: "Sonra",
+    // Activation error
+    activationFailed: "MiniMax Durum eklentisi etkinleştirilemedi",
+    // Help page
+    helpTitle: "MiniMax Durum Yardım",
+    step1Title: "Adım 1: API Anahtarı Al",
+    step1Content: "platform.minimax.io -> Abonelik -> Token-Plan\n\n'Yeni API Anahtarı Oluştur' butonuna tıklayın",
+    step2Title: "Adım 2: Eklentiyi Yapılandır",
+    step2Content: "1. Yan panelde MiniMax simgesine tıklayın\n2. Ayarlar'a tıklayın\n3. API Anahtarını girin\n4. Kaydet'e tıklayın",
+    step4Title: "Kullanım",
+    step4Content: "• Durum çubuğu kullanım ilerlemesini gösterir\n• Yenilemek için durum çubuğuna tıklayın",
+    // Settings page
+    settingsTitle: "MiniMax Durum Ayarları",
+    apiKey: "API Anahtarı",
+    apiKeyPlaceholder: "MiniMax API Anahtarınızı girin",
+    apiKeyInfo: "API anahtarınızı platform.minimax.io adresinden alın",
+    displayTitle: "Görüntü Ayarları",
+    refreshInterval: "Yenileme Aralığı (saniye)",
+    refreshIntervalInfo: "Otomatik yenileme aralığı (10-300 saniye)",
+    modelSelect: "Model",
+    showTooltip: "Detaylı ipucu göster",
+    save: "Kaydet",
+    cancel: "İptal",
+    apiKeyError: "Lütfen API Anahtarını girin",
+    invalidInterval: "Yenileme aralığı 5-300 saniye arasında olmalıdır",
+    modelAuto: "İlk modeli otomatik seç",
+    modelEmpty: "Lütfen önce API Anahtarını yapılandırın",
+    language: "Dil",
+    languageInfo: "Eklenti dilini seçin",
+    settingsSaved: "Ayarlar kaydedildi!",
+    // Status bar i18n
+    domestic: "Yurtiçi",
+    overseas: "Yurtdışı",
+    model: "Model",
+    usageProgress: "Kullanım",
+    remainingTime: "Kalan",
+    timeWindow: "Zaman Penceresi",
+    weeklyUsage: "Haftalık",
+    weeklyReset: "Haftalık Sıfırlama",
+    billingStats: "=== Token Kullanım İstatistikleri ===",
+    expiry: "Bitiş",
+    apiQuota: "API Kotası",
+    reset: "Sıfırla",
+    used: "Kullanılan",
+    unlimited: "Sınırsız",
+    refresh: "Yenile",
+    // Tooltip
+    period: "Dönem",
+    quotaPanel: "MINIMAX · Kota Paneli",
+    colModel: "Model",
+    colUsage: "Kullanım",
+    colPct: "%",
+    colWeek: "Haftalık",
+    colReset: "Sıfırla",
+    groupCore: "Çekirdek",
+    groupCodingPlan: "Kodlama Planı",
+    groupMedia: "Medya",
+    groupOther: "Diğer",
+    tokens: "jeton",
+    updated: "Güncellendi",
+  },
+  "en-US": {
+    // Tree view
+    tokenUsageStats: "Token Usage Stats",
+    yesterday: "Yesterday",
+    last7Days: "Last 7 days",
+    thisMonth: "This month",
+    settings: "Settings",
+    help: "Help",
+    openSettings: "Open Settings",
+    viewHelp: "View Help",
+    // Status bar
+    needsConfiguration: "MiniMax: Needs Configuration",
+    clickToConfigure: "MiniMax Status requires Token configuration\nClick to configure now",
+    loading: "⏳ MiniMax: Loading...",
+    fetchingStatus: "MiniMax Status\nFetching status...",
+    // Welcome message
+    welcomeTitle: "Welcome to MiniMax Status!",
+    welcomeMessage: "Please configure your access token to get started.",
+    configureNow: "Configure Now",
+    later: "Later",
+    // Activation error
+    activationFailed: "MiniMax Status extension activation failed",
+    // Help page
+    helpTitle: "MiniMax Status Help",
+    step1Title: "Step 1: Get API Key",
+    step1Content: "Go to platform.minimax.io -> Subscription -> Token-Plan\n\nClick 'Create new API Key'",
+    step2Title: "Step 2: Configure Plugin",
+    step2Content: "1. Click MiniMax icon in sidebar\n2. Click Settings\n3. Enter API Key\n4. Click Save",
+    step4Title: "Usage",
+    step4Content: "• Status bar shows usage progress\n• Click status bar to refresh",
+    // Settings page
+    settingsTitle: "MiniMax Status Settings",
+    apiKey: "API Key",
+    apiKeyPlaceholder: "Enter your MiniMax API Key",
+    apiKeyInfo: "Get your API key from platform.minimax.io",
+    displayTitle: "Display Settings",
+    refreshInterval: "Refresh Interval (seconds)",
+    refreshIntervalInfo: "Auto-refresh interval (10-300 seconds)",
+    modelSelect: "Model",
+    showTooltip: "Show detailed tooltip",
+    save: "Save",
+    cancel: "Cancel",
+    apiKeyError: "Please enter API Key",
+    invalidInterval: "Refresh interval must be between 5-300 seconds",
+    modelAuto: "Auto select first model",
+    modelEmpty: "Please configure API Key first",
+    language: "Language",
+    languageInfo: "Select extension language",
+    settingsSaved: "Settings saved!",
+    // Status bar i18n
+    domestic: "Domestic",
+    overseas: "Overseas",
+    model: "Model",
+    usageProgress: "Usage",
+    remainingTime: "Remaining",
+    timeWindow: "Time Window",
+    weeklyUsage: "Weekly",
+    weeklyReset: "Weekly Reset",
+    billingStats: "=== Token Usage Stats ===",
+    expiry: "Expiry",
+    apiQuota: "API QUOTA",
+    reset: "Reset",
+    used: "Used",
+    unlimited: "Unlimited",
+    refresh: "Refresh",
+    // Tooltip
+    period: "Period",
+    quotaPanel: "MINIMAX · Quota Panel",
+    colModel: "Model",
+    colUsage: "Usage",
+    colPct: "%",
+    colWeek: "Weekly",
+    colReset: "Reset",
+    groupCore: "Core",
+    groupCodingPlan: "Coding Plan",
+    groupMedia: "Media",
+    groupOther: "Other",
+    tokens: "tokens",
+    updated: "Updated",
+  },
+};
+
+// Current language (default to en-US)
+let currentLanguage = "en-US";
+
+// Helper to get translation
+function t(key) {
+  return i18n[currentLanguage]?.[key] || i18n["en-US"]?.[key] || key;
+}
+
 // TreeView data provider for sidebar
 class MinimaxStatusTreeProvider {
   constructor() {
@@ -8,24 +180,21 @@ class MinimaxStatusTreeProvider {
     this.onDidChangeTreeData = this._onDidChangeTreeData.event;
     this.usageData = null;
     this.usageStats = null;
-    this.language = "zh-CN";
+    this.language = "en-US";
   }
 
-  setData(usageData, usageStats, language) {
+  setData(usageData, usageStats) {
     this.usageData = usageData;
     this.usageStats = usageStats;
-    this.language = language;
     this.refresh();
   }
+
 
   getTreeItem(element) {
     return element;
   }
 
   getChildren(element) {
-    const config = vscode.workspace.getConfiguration("minimaxStatus");
-    this.language = config.get("language") || "zh-CN";
-
     // If element is provided, return its children (for nested items)
     if (element && element.children) {
       return element.children;
@@ -33,77 +202,77 @@ class MinimaxStatusTreeProvider {
 
     const items = [];
 
-    // Token 消耗统计（可折叠组）
-    if (this.usageStats && (this.usageStats.lastDayUsage > 0 || this.usageStats.weeklyUsage > 0 || this.usageStats.planTotalUsage > 0)) {
-      const statsHeader = new vscode.TreeItem(
-        this.language === "zh-CN" ? "Token 消耗统计" : "Token Usage Stats",
-        vscode.TreeItemCollapsibleState.Expanded
-      );
-      statsHeader.iconPath = new vscode.ThemeIcon("graph");
-      statsHeader.children = [];
+// Token Usage Statistics (collapsible group)
+      if (this.usageStats && (this.usageStats.lastDayUsage > 0 || this.usageStats.weeklyUsage > 0 || this.usageStats.planTotalUsage > 0)) {
+        const statsHeader = new vscode.TreeItem(
+          t("tokenUsageStats"),
+          vscode.TreeItemCollapsibleState.Expanded
+        );
+        statsHeader.iconPath = new vscode.ThemeIcon("graph");
+        statsHeader.children = [];
 
-      // 昨日消耗
-      const yesterday = new vscode.TreeItem(
-        `${this.language === "zh-CN" ? "昨日消耗" : "Yesterday"}: ${this.formatNum(this.usageStats.lastDayUsage)}`,
+        // Yesterday usage
+        const yesterday = new vscode.TreeItem(
+          `${t("yesterday")}: ${this.formatNum(this.usageStats.lastDayUsage)}`,
+          vscode.TreeItemCollapsibleState.None
+        );
+        yesterday.iconPath = new vscode.ThemeIcon("calendar");
+        statsHeader.children.push(yesterday);
+
+        // Last 7 days usage
+        const weekly = new vscode.TreeItem(
+          `${t("last7Days")}: ${this.formatNum(this.usageStats.weeklyUsage)}`,
+          vscode.TreeItemCollapsibleState.None
+        );
+        weekly.iconPath = new vscode.ThemeIcon("calendar");
+        statsHeader.children.push(weekly);
+
+        // This month usage
+        const monthly = new vscode.TreeItem(
+          `${t("thisMonth")}: ${this.formatNum(this.usageStats.planTotalUsage)}`,
+          vscode.TreeItemCollapsibleState.None
+        );
+        monthly.iconPath = new vscode.ThemeIcon("calendar");
+        statsHeader.children.push(monthly);
+
+        items.push(statsHeader);
+      }
+
+      // Extension Settings
+      const settingsItem = new vscode.TreeItem(
+        t("settings"),
         vscode.TreeItemCollapsibleState.None
       );
-      yesterday.iconPath = new vscode.ThemeIcon("calendar");
-      statsHeader.children.push(yesterday);
+      settingsItem.command = {
+        command: "minimaxStatus.setup",
+        title: t("openSettings")
+      };
+      settingsItem.iconPath = new vscode.ThemeIcon("settings");
+      items.push(settingsItem);
 
-      // 近7天消耗
-      const weekly = new vscode.TreeItem(
-        `${this.language === "zh-CN" ? "近7天消耗" : "Last 7 days"}: ${this.formatNum(this.usageStats.weeklyUsage)}`,
+      // Help & Tutorial
+      const helpItem = new vscode.TreeItem(
+        t("help"),
         vscode.TreeItemCollapsibleState.None
       );
-      weekly.iconPath = new vscode.ThemeIcon("calendar");
-      statsHeader.children.push(weekly);
-
-      // 当月消耗
-      const monthly = new vscode.TreeItem(
-        `${this.language === "zh-CN" ? "当月消耗" : "This month"}: ${this.formatNum(this.usageStats.planTotalUsage)}`,
-        vscode.TreeItemCollapsibleState.None
-      );
-      monthly.iconPath = new vscode.ThemeIcon("calendar");
-      statsHeader.children.push(monthly);
-
-      items.push(statsHeader);
-    }
-
-    // 插件设置
-    const settingsItem = new vscode.TreeItem(
-      this.language === "zh-CN" ? "插件设置" : "Settings",
-      vscode.TreeItemCollapsibleState.None
-    );
-    settingsItem.command = {
-      command: "minimaxStatus.setup",
-      title: this.language === "zh-CN" ? "打开设置" : "Open Settings"
-    };
-    settingsItem.iconPath = new vscode.ThemeIcon("settings");
-    items.push(settingsItem);
-
-    // 使用教程
-    const helpItem = new vscode.TreeItem(
-      this.language === "zh-CN" ? "使用教程" : "Help",
-      vscode.TreeItemCollapsibleState.None
-    );
-    helpItem.command = {
-      command: "minimaxStatus.showHelp",
-      title: this.language === "zh-CN" ? "查看使用教程" : "View Help"
-    };
-    helpItem.iconPath = new vscode.ThemeIcon("question");
-    items.push(helpItem);
+      helpItem.command = {
+        command: "minimaxStatus.showHelp",
+        title: t("viewHelp")
+      };
+      helpItem.iconPath = new vscode.ThemeIcon("question");
+      items.push(helpItem);
 
     return items;
   }
 
   formatNum(num) {
     if (num >= 100000000) {
-      return (num / 100000000).toFixed(1).replace(/\.0$/, "") + "亿";
+      return (num / 100000000).toFixed(1).replace(/\.0$/, "") + "00M";
     }
     if (num >= 10000) {
-      return (num / 10000).toFixed(1).replace(/\.0$/, "") + "万";
+      return (num / 10000).toFixed(1).replace(/\.0$/, "") + "0K";
     }
-    return num.toLocaleString("zh-CN");
+    return num.toLocaleString();
   }
 
   refresh() {
@@ -144,37 +313,21 @@ function activate(context) {
     const BILLING_CACHE_DURATION = 30000; // 30 seconds cache for billing data
 
     const updateStatus = async () => {
-      let language = "zh-CN";
       try {
         // Refresh API config to get latest settings
         api.refreshConfig();
-        const config = vscode.workspace.getConfiguration("minimaxStatus");
-        const overseasDisplay = config.get("overseasDisplay") || "none";
-        language = config.get("language") || "zh-CN";
 
-        // Get domestic data
+        // Get usage data
         const [apiData, subscriptionData] = await Promise.all([
           api.getUsageStatus(),
           api.getSubscriptionDetails().catch(() => null)
         ]);
         const usageData = api.parseUsageData(apiData, subscriptionData);
 
-        // Get overseas data if needed
-        let overseasUsageData = null;
-        let overseasApiData = null;
-        if (overseasDisplay === 'overseas' || overseasDisplay === 'both') {
-          try {
-            overseasApiData = await api.getOverseasUsageStatus();
-            overseasUsageData = api.parseUsageData(overseasApiData, null);
-          } catch (overseasError) {
-            console.error("Failed to fetch overseas data:", overseasError.message);
-          }
-        }
-
         // Fetch billing data for usage statistics (with caching)
         const nowDate = new Date();
         const now = nowDate.getTime();
-        // 按自然月统计当月消耗
+        // Calculate monthly usage from natural month
         const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1, 0, 0, 0, 0).getTime();
         if (!billingCache || now - billingCacheTime > BILLING_CACHE_DURATION) {
           try {
@@ -198,14 +351,12 @@ function activate(context) {
           usageStats = api.calculateUsageStats(billingCache, monthStart, now);
         }
 
-        updateStatusBar(statusBarItem, api, usageData, apiData, usageStats, overseasUsageData, overseasApiData, overseasDisplay, language);
-        treeProvider.setData(usageData, usageStats, language);
+        updateStatusBar(statusBarItem, api, usageData, apiData, usageStats);
+        treeProvider.setData(usageData, usageStats);
       } catch (error) {
-        console.error("获取状态失败:", error.message);
-        const errorText = language === 'en-US' ? 'Error' : '错误';
-        const clickConfig = language === 'en-US' ? 'Click to configure' : '点击配置';
+        console.error("Failed to fetch status:", error.message);
         statusBarItem.text = "$(warning) MiniMax";
-        statusBarItem.tooltip = `${errorText}: ${error.message}\n${clickConfig}`;
+        statusBarItem.tooltip = `Error: ${error.message}\nClick to configure`;
         statusBarItem.color = new vscode.ThemeColor("errorForeground");
       }
     };
@@ -269,39 +420,35 @@ function activate(context) {
 
     // Always show status bar item
     if (!api.token) {
-      statusBarItem.text = "MiniMax: 需要配置";
+      statusBarItem.text = t("needsConfiguration");
       statusBarItem.color = new vscode.ThemeColor("warningForeground");
-      statusBarItem.tooltip =
-        "MiniMax Status 需要配置 Token\n点击立即配置";
+      statusBarItem.tooltip = t("clickToConfigure");
       statusBarItem.command = "minimaxStatus.setup";
 
       setTimeout(() => {
         vscode.window
           .showInformationMessage(
-            "欢迎使用 MiniMax Status！\n\n需要配置您的访问令牌才能开始使用。",
-            "立即配置",
-            "稍后设置"
+            `${t("welcomeTitle")}\n\n${t("welcomeMessage")}`,
+            t("configureNow"),
+            t("later")
           )
           .then((selection) => {
-            if (selection === "立即配置") {
+            if (selection === t("configureNow")) {
               vscode.commands.executeCommand("minimaxStatus.setup");
             }
           });
       }, 2000);
     } else {
       // If configured but no data yet, show waiting message
-      const loadingLang = config.get("language") || "zh-CN";
-      const loadingText = loadingLang === 'en-US' ? 'Loading...' : '加载中...';
-      const loadingTooltip = loadingLang === 'en-US' ? 'MiniMax Status\nFetching status...' : 'MiniMax Status\n正在获取状态...';
-      statusBarItem.text = `⏳ MiniMax: ${loadingText}`;
+      statusBarItem.text = t("loading");
       statusBarItem.color = new vscode.ThemeColor("statusBar.foreground");
-      statusBarItem.tooltip = loadingTooltip;
+      statusBarItem.tooltip = t("fetchingStatus");
       statusBarItem.command = "minimaxStatus.refresh";
     }
   } catch (error) {
-    console.error("MiniMax Status 扩展激活失败:", error.message);
+    console.error("MiniMax Status extension activation failed:", error.message);
     vscode.window.showErrorMessage(
-      "MiniMax Status 扩展激活失败: " + error.message
+      `${t("activationFailed")}: ${error.message}`
     );
   }
 }
@@ -309,12 +456,9 @@ function activate(context) {
 // Create help webview
 // eslint-disable-next-line no-unused-vars
 async function showHelpWebView(context) {
-  const config = vscode.workspace.getConfiguration("minimaxStatus");
-  const language = config.get("language") || "zh-CN";
-
   const panel = vscode.window.createWebviewPanel(
     "minimaxHelp",
-    language === "zh-CN" ? "使用教程" : "Help",
+    "MiniMax Status Help",
     vscode.ViewColumn.One,
     {
       enableScripts: true,
@@ -322,36 +466,23 @@ async function showHelpWebView(context) {
     }
   );
 
-  const i18n = {
-    "zh-CN": {
-      title: "MiniMax Status 使用教程",
-      step1Title: "第一步：获取 API Key",
-      step1Content: "国内版：套餐管理 -> Token-Plan\n海外版：Subscribe -> Token-Plan\n\n点击「创建新的 API Key」",
-      step2Title: "第二步：配置插件",
-      step2Content: "1. 点击左侧边栏的 MiniMax 图标\n2. 点击「插件设置」按钮\n3. 填写 API Key\n4. 点击保存",
-      step4Title: "使用说明",
-      step4Content: "• 状态栏显示当前使用进度\n• 点击状态栏可刷新数据\n• 支持国内/海外账号切换",
-    },
-    "en-US": {
-      title: "MiniMax Status Help",
-      step1Title: "Step 1: Get API Key",
-      step1Content: "Domestic: Subscription -> Token-Plan\nOverseas: Subscribe -> Token-Plan\n\nClick 'Create new API Key'",
-      step2Title: "Step 2: Configure Plugin",
-      step2Content: "1. Click MiniMax icon in sidebar\n2. Click Settings\n3. Enter API Key\n4. Click Save",
-      step4Title: "Usage",
-      step4Content: "• Status bar shows usage progress\n• Click status bar to refresh\n• Support domestic/overseas accounts",
-    }
+  const tHelp = {
+    title: t("helpTitle"),
+    step1Title: t("step1Title"),
+    step1Content: t("step1Content"),
+    step2Title: t("step2Title"),
+    step2Content: t("step2Content"),
+    step4Title: t("step4Title"),
+    step4Content: t("step4Content"),
   };
-
-  const t = i18n[language] || i18n["zh-CN"];
 
   panel.webview.html = `
     <!DOCTYPE html>
-    <html lang="${language}">
+    <html lang="${currentLanguage}">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${t.title}</title>
+        <title>${tHelp.title}</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -399,21 +530,21 @@ async function showHelpWebView(context) {
     </head>
     <body>
         <div class="container">
-            <h1>${t.title}</h1>
+            <h1>${tHelp.title}</h1>
 
             <div class="step">
-                <h2>${t.step1Title}</h2>
-                <p>${t.step1Content}</p>
+                <h2>${tHelp.step1Title}</h2>
+                <p>${tHelp.step1Content}</p>
             </div>
 
             <div class="step">
-                <h2>${t.step2Title}</h2>
-                <p>${t.step2Content}</p>
+                <h2>${tHelp.step2Title}</h2>
+                <p>${tHelp.step2Content}</p>
             </div>
 
             <div class="step">
-                <h2>${t.step3Title || t.step4Title}</h2>
-                <p>${t.step3Content || t.step4Content}</p>
+                <h2>${tHelp.step4Title}</h2>
+                <p>${tHelp.step4Content}</p>
             </div>
         </div>
     </body>
@@ -427,7 +558,7 @@ async function showHelpWebView(context) {
 async function showSettingsWebView(context, api, updateStatus) {
   const panel = vscode.window.createWebviewPanel(
     "minimaxSettings",
-    "MiniMax Status 设置",
+    "MiniMax Status Settings",
     vscode.ViewColumn.One,
     {
       enableScripts: true,
@@ -435,81 +566,49 @@ async function showSettingsWebView(context, api, updateStatus) {
     }
   );
 
+  // Get current language
+  const configLang = vscode.workspace.getConfiguration("minimaxStatus");
+  currentLanguage = configLang.get("language") || "en-US";
+
   // Get current configuration
   const config = vscode.workspace.getConfiguration("minimaxStatus");
   const currentToken = config.get("token") || "";
   const currentInterval = config.get("refreshInterval") || 30;
   const currentShowTooltip = config.get("showTooltip") ?? true;
   const currentModelName = config.get("modelName") || "";
-  const currentOverseasDisplay = config.get("overseasDisplay") || "none";
-  const currentOverseasToken = config.get("overseasToken") || "";
-  const currentLanguage = config.get("language") || "zh-CN";
 
-  // Language translations
-  const i18n = {
-    "zh-CN": {
-      title: "MiniMax 设置",
-      domesticTitle: "国内账号",
-      overseasTitle: "海外账号",
-      apiKey: "API Key",
-      apiKeyPlaceholder: "请输入国内 API Key",
-      apiKeyInfo: "platform.minimaxi.com 的 API Key",
-      overseasApiKeyPlaceholder: "请输入海外 API Key",
-      overseasApiKeyInfo: "platform.minimax.io 的 API Key（用于显示海外用量）",
-      overseasGroupId: "GroupID",
-      overseasGroupIdPlaceholder: "请输入 groupID",
-      overseasGroupIdInfo: "海外账号的 GroupID",
-      displayTitle: "显示设置",
-      refreshInterval: "刷新间隔（秒）",
-      refreshIntervalInfo: "自动刷新间隔，建议 10-30 秒",
-      modelSelect: "模型选择",
-      showTooltip: "显示详细提示信息",
-      overseasTitle2: "海外用量",
-      displayMode: "显示模式",
-      displayModeInfo: "选择是否显示海外版用量",
-      modeNone: "仅显示国内",
-      modeOverseas: "仅显示海外",
-      modeBoth: "国内+海外并行",
-      save: "保存",
-      cancel: "取消",
-      apiKeyError: "请输入 API Key",
-      overseasApiKeyError: "请输入海外 API Key",
-      invalidInterval: "刷新间隔必须在 5-300 秒之间",
-      modelAuto: "自动选择第一个模型",
-      modelEmpty: "请先配置 API Key",
-    },
-    "en-US": {
-      title: "MiniMax Settings",
-      domesticTitle: "Domestic Account",
-      overseasTitle: "Overseas Account",
-      apiKey: "API Key",
-      apiKeyPlaceholder: "Enter domestic API Key",
-      apiKeyInfo: "platform.minimaxi.com API Key",
-      overseasApiKeyPlaceholder: "Enter overseas API Key",
-      overseasApiKeyInfo: "platform.minimax.io API Key (for overseas usage)",
-      displayTitle: "Display Settings",
-      refreshInterval: "Refresh Interval (seconds)",
-      refreshIntervalInfo: "Auto-refresh interval, 10-30 seconds recommended",
-      modelSelect: "Model",
-      showTooltip: "Show detailed tooltip",
-      overseasTitle2: "Overseas Usage",
-      displayMode: "Display Mode",
-      displayModeInfo: "Choose whether to display overseas usage",
-      modeNone: "Domestic only",
-      modeOverseas: "Overseas only",
-      modeBoth: "Domestic + Overseas",
-      save: "Save",
-      cancel: "Cancel",
-      apiKeyError: "API Key is required",
-      overseasApiKeyError: "Overseas API Key is required",
-      overseasGroupIdError: "Overseas GroupID is required",
-      invalidInterval: "Refresh interval must be between 5-300 seconds",
-      modelAuto: "Auto select first model",
-      modelEmpty: "Please configure API Key first",
-    }
+  // Labels from i18n
+  const tSettings = {
+    title: t("settingsTitle"),
+    apiKey: t("apiKey"),
+    apiKeyPlaceholder: t("apiKeyPlaceholder"),
+    apiKeyInfo: t("apiKeyInfo"),
+    displayTitle: t("displayTitle"),
+    refreshInterval: t("refreshInterval"),
+    refreshIntervalInfo: t("refreshIntervalInfo"),
+    modelSelect: t("modelSelect"),
+    showTooltip: t("showTooltip"),
+    save: t("save"),
+    cancel: t("cancel"),
+    apiKeyError: t("apiKeyError"),
+    invalidInterval: t("invalidInterval"),
+    modelAuto: t("modelAuto"),
+    modelEmpty: t("modelEmpty"),
+    language: t("language"),
+    languageInfo: t("languageInfo"),
   };
 
-  const t = i18n[currentLanguage] || i18n["zh-CN"];
+  // Language options
+  const langOptions = `
+    <option value="en-US" ${currentLanguage === 'en-US' ? 'selected' : ''}>English</option>
+    <option value="tr-TR" ${currentLanguage === 'tr-TR' ? 'selected' : ''}>Türkçe</option>
+  `;
+
+  // Model labels from i18n
+  const modelLabels = {
+    modelAuto: t("modelAuto"),
+    modelEmpty: t("modelEmpty"),
+  };
 
   // Fetch available models if token is configured
   let availableModels = [];
@@ -524,20 +623,19 @@ async function showSettingsWebView(context, api, updateStatus) {
   }
 
   // Create model options
-  const t_for_model = i18n[currentLanguage] || i18n["zh-CN"];
   const modelOptions = availableModels.length > 0
-    ? `<option value="">${t_for_model.modelAuto}</option>` +
+    ? `<option value="">${modelLabels.modelAuto}</option>` +
       availableModels.map(m => `<option value="${m}" ${m === currentModelName ? 'selected' : ''}>${m}</option>`).join('')
-    : `<option value="">${t_for_model.modelEmpty}</option>`;
+    : `<option value="">${modelLabels.modelEmpty}</option>`;
 
   // Create HTML content
   panel.webview.html = `
     <!DOCTYPE html>
-    <html lang="zh-CN">
+    <html lang="${currentLanguage}">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MiniMax Status 设置</title>
+        <title>${tSettings.title}</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -661,40 +759,29 @@ async function showSettingsWebView(context, api, updateStatus) {
     </head>
     <body>
         <div class="container">
-            <h1>${t.title}</h1>
+            <h1>${tSettings.title}</h1>
 
-            <!-- 国内账号卡片 -->
+            <!-- API Key -->
             <div class="card">
-                <h2>${t.domesticTitle}</h2>
+                <h2>${tSettings.apiKey}</h2>
                 <div class="form-group">
-                    <label for="token">${t.apiKey}</label>
-                    <input type="text" id="token" placeholder="${t.apiKeyPlaceholder}" value="${currentToken}">
-                    <div class="info-text">${t.apiKeyInfo}</div>
+                    <label for="token">${tSettings.apiKey}</label>
+                    <input type="text" id="token" placeholder="${tSettings.apiKeyPlaceholder}" value="${currentToken}">
+                    <div class="info-text">${tSettings.apiKeyInfo}</div>
                     <div class="error" id="token-error"></div>
                 </div>
             </div>
 
-            <!-- 海外账号卡片 -->
+            <!-- Display Settings -->
             <div class="card">
-                <h2>${t.overseasTitle}</h2>
+                <h2>${tSettings.displayTitle}</h2>
                 <div class="form-group">
-                    <label for="overseasToken">${t.apiKey}</label>
-                    <input type="text" id="overseasToken" placeholder="${t.overseasApiKeyPlaceholder}" value="${currentOverseasToken}">
-                    <div class="info-text">${t.overseasApiKeyInfo}</div>
-                    <div class="error" id="overseasToken-error"></div>
-                </div>
-            </div>
-
-            <!-- 显示设置卡片 -->
-            <div class="card">
-                <h2>${t.displayTitle}</h2>
-                <div class="form-group">
-                    <label for="interval">${t.refreshInterval}</label>
+                    <label for="interval">${tSettings.refreshInterval}</label>
                     <input type="number" id="interval" min="5" max="300" value="${currentInterval}">
-                    <div class="info-text">${t.refreshIntervalInfo}</div>
+                    <div class="info-text">${tSettings.refreshIntervalInfo}</div>
                 </div>
                 <div class="form-group">
-                    <label for="modelName">${t.modelSelect}</label>
+                    <label for="modelName">${tSettings.modelSelect}</label>
                     <select id="modelName">
                         ${modelOptions}
                     </select>
@@ -704,35 +791,21 @@ async function showSettingsWebView(context, api, updateStatus) {
                         <input type="checkbox" id="showTooltip" ${
                           currentShowTooltip ? "checked" : ""
                         }>
-                        <label for="showTooltip">${t.showTooltip}</label>
+                        <label for="showTooltip">${tSettings.showTooltip}</label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="language">Language / 语言</label>
+                    <label for="language">${tSettings.language}</label>
                     <select id="language">
-                        <option value="zh-CN" ${currentLanguage === 'zh-CN' ? 'selected' : ''}>中文</option>
-                        <option value="en-US" ${currentLanguage === 'en-US' ? 'selected' : ''}>English</option>
+                        ${langOptions}
                     </select>
-                </div>
-            </div>
-
-            <!-- 海外用量卡片 -->
-            <div class="card">
-                <h2>${t.overseasTitle2}</h2>
-                <div class="form-group">
-                    <label for="overseasDisplay">${t.displayMode}</label>
-                    <select id="overseasDisplay">
-                        <option value="none" ${currentOverseasDisplay === 'none' ? 'selected' : ''}>${t.modeNone}</option>
-                        <option value="overseas" ${currentOverseasDisplay === 'overseas' ? 'selected' : ''}>${t.modeOverseas}</option>
-                        <option value="both" ${currentOverseasDisplay === 'both' ? 'selected' : ''}>${t.modeBoth}</option>
-                    </select>
-                    <div class="info-text">${t.displayModeInfo}</div>
+                    <div class="info-text">${tSettings.languageInfo}</div>
                 </div>
             </div>
 
             <div class="button-group">
-                <button id="saveBtn">${t.save}</button>
-                <button id="cancelBtn" class="secondary">${t.cancel}</button>
+                <button id="saveBtn">${tSettings.save}</button>
+                <button id="cancelBtn" class="secondary">${tSettings.cancel}</button>
             </div>
         </div>
 
@@ -741,39 +814,22 @@ async function showSettingsWebView(context, api, updateStatus) {
 
             document.getElementById('saveBtn').addEventListener('click', () => {
                 const token = document.getElementById('token').value.trim();
-                const overseasToken = document.getElementById('overseasToken').value.trim();
                 const interval = parseInt(document.getElementById('interval').value, 10);
                 const showTooltip = document.getElementById('showTooltip').checked;
                 const modelName = document.getElementById('modelName').value;
-                const overseasDisplay = document.getElementById('overseasDisplay').value;
                 const language = document.getElementById('language').value;
 
                 // Clear previous errors
                 document.getElementById('token-error').textContent = '';
-                document.getElementById('overseasToken-error').textContent = '';
 
                 // Validate inputs
-                let hasError = false;
-
                 if (!token) {
-                    document.getElementById('token-error').textContent = t.apiKeyError;
-                    hasError = true;
-                }
-
-                // Validate overseas credentials based on display mode
-                if (overseasDisplay === 'overseas' || overseasDisplay === 'both') {
-                    if (!overseasToken) {
-                        document.getElementById('overseasToken-error').textContent = t.overseasApiKeyError;
-                        hasError = true;
-                    }
+                    document.getElementById('token-error').textContent = tSettings.apiKeyError;
+                    return;
                 }
 
                 if (interval < 5 || interval > 300) {
-                    alert(t.invalidInterval);
-                    hasError = true;
-                }
-
-                if (hasError) {
+                    alert(tSettings.invalidInterval);
                     return;
                 }
 
@@ -781,11 +837,9 @@ async function showSettingsWebView(context, api, updateStatus) {
                 vscode.postMessage({
                     command: 'saveSettings',
                     token: token,
-                    overseasToken: overseasToken,
                     interval: interval,
                     showTooltip: showTooltip,
                     modelName: modelName,
-                    overseasDisplay: overseasDisplay,
                     language: language
                 });
             });
@@ -838,26 +892,13 @@ async function showSettingsWebView(context, api, updateStatus) {
               vscode.ConfigurationTarget.Global
             );
           }
-          if (message.overseasDisplay !== undefined) {
-            config.update(
-              "overseasDisplay",
-              message.overseasDisplay,
-              vscode.ConfigurationTarget.Global
-            );
-          }
-          if (message.overseasToken !== undefined) {
-            config.update(
-              "overseasToken",
-              message.overseasToken,
-              vscode.ConfigurationTarget.Global
-            );
-          }
           if (message.language !== undefined) {
             config.update(
               "language",
               message.language,
               vscode.ConfigurationTarget.Global
             );
+            currentLanguage = message.language;
           }
 
           panel.dispose();
@@ -865,8 +906,7 @@ async function showSettingsWebView(context, api, updateStatus) {
           // Refresh status
           updateStatus();
 
-          const successMsg = currentLanguage === 'en-US' ? 'Settings saved!' : '配置保存成功！';
-          vscode.window.showInformationMessage(successMsg);
+          vscode.window.showInformationMessage(t("settingsSaved"));
           break;
         }
 
@@ -916,92 +956,11 @@ function _getModelBarColor(model) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseasData = null, overseasApiData = null, displayMode = 'none', language = 'zh-CN') {
-  // Status bar i18n
-  const statusI18n = {
-    "zh-CN": {
-      domestic: "国内",
-      overseas: "海外",
-      model: "模型",
-      usageProgress: "使用进度",
-      remainingTime: "剩余时间",
-      timeWindow: "时间窗口",
-      weeklyUsage: "周用量",
-      weeklyReset: "周重置",
-      billingStats: "=== Token 消耗统计 ===",
-      yesterday: "昨日消耗",
-      last7Days: "近7天消耗",
-      totalUsage: "当月消耗",
-      expiry: "套餐到期",
-      clickToRefresh: "点击刷新状态",
-      apiQuota: "API 配额",
-      reset: "重置",
-      used: "已用",
-      unlimited: "不受限制",
-      refresh: "刷新",
-    },
-    "en-US": {
-      domestic: "Domestic",
-      overseas: "Overseas",
-      model: "Model",
-      usageProgress: "Usage",
-      remainingTime: "Remaining",
-      timeWindow: "Time Window",
-      weeklyUsage: "Weekly",
-      weeklyReset: "Weekly Reset",
-      billingStats: "=== Token Usage Stats ===",
-      yesterday: "Yesterday",
-      last7Days: "Last 7 days",
-      totalUsage: "This month",
-      expiry: "Expiry",
-      clickToRefresh: "Click to refresh",
-      apiQuota: "API QUOTA",
-      reset: "Reset",
-      used: "Used",
-      unlimited: "Unlimited",
-      refresh: "Refresh",
-    }
-  };
-
-  const t = statusI18n[language] || statusI18n["zh-CN"];
-
-  // Helper to translate remaining time text
-  // eslint-disable-next-line no-unused-vars
-  const _translateRemainingText = (text) => {
-    if (language === 'en-US') {
-      return text
-        .replace(/小时/, 'h')
-        .replace(/分钟/, 'min')
-        .replace(/后重置/, ' until reset');
-    }
-    return text;
-  };
-
-  // Helper to translate expiry text
-  const translateExpiryText = (text) => {
-    if (language === 'en-US') {
-      return text
-        .replace(/还剩 (\d+) 天/, '$1 days remaining')
-        .replace(/今天到期/, 'expires today')
-        .replace(/已过期 (\d+) 天/, 'expired $1 days ago');
-    }
-    return text;
-  };
-
+function updateStatusBar(statusBarItem, api, data, apiData, usageStats) {
   // Helper to format number with units
   // eslint-disable-next-line no-unused-vars
   const _formatNumberI18n = (num) => {
-    // Chinese format uses 万/亿 for readability
-    if (language === 'zh-CN') {
-      if (num >= 100000000) {
-        return (num / 100000000).toFixed(2).replace(/\.0$/, "") + "亿";
-      }
-      if (num >= 10000) {
-        return (num / 10000).toFixed(2).replace(/\.0$/, "") + "万";
-      }
-      return num.toLocaleString("zh-CN");
-    }
-    // English format uses K/M/B with higher precision
+    // English format uses K/M/B
     if (num >= 1000000000) {
       return (num / 1000000000).toFixed(2).replace(/\.0$/, "") + "B";
     }
@@ -1014,21 +973,11 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
     return num.toLocaleString("en-US");
   };
 
-  // 关键修复：设置状态栏命令为刷新
+  // Key fix: set status bar command to refresh
   statusBarItem.command = "minimaxStatus.refresh";
 
-  // Determine which data to display based on mode
-  let displayData;
-  if (displayMode === 'overseas' && overseasData) {
-    displayData = overseasData;
-  } else if (displayMode === 'both' && overseasData) {
-    displayData = data;
-  } else {
-    displayData = data;
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  const { usage, modelName, remaining, expiry, planTimeWindow } = displayData;
+  // Use the main data
+  const { usage, modelName, remaining, expiry, planTimeWindow } = data;
 
   // Set status bar text with color
   const percentage = usage.percentage;
@@ -1042,25 +991,19 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
     statusBarItem.color = new vscode.ThemeColor("errorForeground");
   }
 
-  // Build status bar text based on display mode
-  if (displayMode === 'both' && overseasData) {
-    const domesticPercent = data.usage.percentage;
-    const overseasPercent = overseasData.usage.percentage;
-    statusBarItem.text = `$(clock) ${t.domestic}${domesticPercent}% / ${t.overseas}${overseasPercent}%`;
-  } else {
-    // 显示格式：剩余时间 百分比 · 周 百分比
-    const remainingText = remaining.hours > 0 ? `${remaining.hours}h` : `${remaining.minutes}m`;
-    const weeklyLabel = language === 'en-US' ? 'W' : '周';
-    let weeklyText = '';
-    if (data.weekly) {
-      if (data.weekly.unlimited) {
-        weeklyText = ` · ${weeklyLabel} ♾️`;
-      } else {
-        weeklyText = ` · ${weeklyLabel} ${data.weekly.percentage}%`;
-      }
+  // Build status bar text
+  // Display format: remaining time percentage · weekly percentage
+  const remainingText = remaining.hours > 0 ? `${remaining.hours}h` : `${remaining.minutes}m`;
+  const weeklyLabel = 'W';
+  let weeklyText = '';
+  if (data.weekly) {
+    if (data.weekly.unlimited) {
+      weeklyText = ` · ${weeklyLabel} ♾️`;
+    } else {
+      weeklyText = ` · ${weeklyLabel} ${data.weekly.percentage}%`;
     }
-    statusBarItem.text = `$(clock) ${remainingText} ${percentage}%${weeklyText}`;
   }
+  statusBarItem.text = `$(clock) ${remainingText} ${percentage}%${weeklyText}`;
 
   // ── Build tooltip with table layout (panel-style) ──────────────────
   const allModelsData = api.parseAllModelsForTooltip(apiData);
@@ -1068,18 +1011,11 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
   md.isTrusted = true;
   md.supportHtml = true;
 
-  const isEn = language === 'en-US';
-
-  // Helper: format number with 万/亿 or K/M shorthand
+  // Helper: format number with K/M shorthand
   const formatNum = (num) => {
-    if (isEn) {
-      if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-      if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-      return num.toLocaleString("en-US");
-    }
-    if (num >= 100000000) return (num / 100000000).toFixed(1).replace(/\.0$/, "") + "亿";
-    if (num >= 10000) return (num / 10000).toFixed(1).replace(/\.0$/, "") + "万";
-    return num.toLocaleString("zh-CN");
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    return num.toLocaleString();
   };
 
   // Helper: colored percentage span
@@ -1097,7 +1033,7 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
     if (!ts) return '';
     let ms = ts < 1e12 ? ts * 1000 : ts;
     if (isEnd) ms -= 1000;
-    return new Intl.DateTimeFormat('en-CA', {
+    return new Intl.DateTimeFormat(currentLanguage === 'tr-TR' ? 'tr-TR' : 'en-CA', {
       year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(new Date(ms));
   };
@@ -1111,11 +1047,11 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
   let content = '';
   // Header: title left, period right (full-width table for proper alignment).
   // Markdown bold (**) is NOT parsed inside <td>, so use plain text and <strong>.
-  const titleText = `MINIMAX · ${isEn ? 'Quota Panel' : '配额面板'}`;
-  const periodLabel = isEn ? 'Period' : '周期';
+  const titleText = t("quotaPanel");
+  const periodLabel = t("period");
   content += `<table width="100%" cellspacing="0" cellpadding="0"><tr>`;
   content += `<td align="left">${titleText}</td>`;
-  content += `<td align="right">${periodLabel}：${periodText}</td>`;
+  content += `<td align="right">${periodLabel}: ${periodText}</td>`;
   content += `</tr></table>\n\n`;
   content += `---\n\n`;
 
@@ -1124,11 +1060,11 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
   // (VS Code tooltip strips padding/height styles, so bold group titles
   // are the cleanest way to separate categories without wasted vertical space).
   const models = allModelsData.models || [];
-  const colModel = isEn ? 'Model' : '模型';
-  const colUsage = isEn ? 'Usage' : '用量';
-  const colPct   = isEn ? '%' : '占比';
-  const colWeek  = isEn ? 'Weekly' : '每周';
-  const colReset = isEn ? 'Reset' : '重置';
+  const colModel = t("colModel");
+  const colUsage = t("colUsage");
+  const colPct   = t("colPct");
+  const colWeek  = t("colWeek");
+  const colReset = t("colReset");
 
   const thStyle = 'style="padding:2px 6px;font-weight:normal;opacity:0.7"';
   const tdStyle = 'style="padding:2px 6px"';
@@ -1137,8 +1073,8 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
   // Group meta: name + colored dot (geometric ●, never rendered as emoji)
   const getGroupMeta = (model) => {
     const name = model.name || '';
-    if (model.isTextModel) return { key: 'core', label: isEn ? 'Core' : '核心模型', color: '#dcdcaa' };
-    if (name.includes('coding-plan')) return { key: 'coding', label: 'Coding Plan', color: '#9cdcfe' };
+    if (model.isTextModel) return { key: 'core', label: t("groupCore"), color: '#dcdcaa' };
+    if (name.includes('coding-plan')) return { key: 'coding', label: t("groupCodingPlan"), color: '#9cdcfe' };
     if (
       name.includes('speech') ||
       name.includes('Hailuo') ||
@@ -1146,9 +1082,9 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
       name.includes('image') ||
       name.includes('lyrics')
     ) {
-      return { key: 'media', label: isEn ? 'Media' : '多媒体模型', color: '#4ec9b0' };
+      return { key: 'media', label: t("groupMedia"), color: '#4ec9b0' };
     }
-    return { key: 'other', label: isEn ? 'Other' : '其他模型', color: '#888888' };
+    return { key: 'other', label: t("groupOther"), color: '#888888' };
   };
 
   // HTML4 width attributes set per-column minimum width. CSS sizing is stripped
@@ -1207,12 +1143,12 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
   content += `</table>\n\n`;
   content += `---\n\n`;
 
-  // ── Bottom 3-column Token stats: 昨日 / 近7天 / 当月 (real data from billing API) ──
+  // ── Bottom 3-column Token stats: Yesterday / Last 7 Days / This Month (real data from billing API) ──
   if (usageStats && (usageStats.lastDayUsage > 0 || usageStats.weeklyUsage > 0 || usageStats.planTotalUsage > 0)) {
-    const lblYesterday = isEn ? 'Yesterday' : '昨日消耗';
-    const lbl7d        = isEn ? 'Last 7 Days' : '近 7 天';
-    const lblMonth     = isEn ? 'This Month' : '当月消耗';
-    const unit         = 'tokens';
+    const lblYesterday = t("yesterday");
+    const lbl7d        = t("last7Days");
+    const lblMonth     = t("thisMonth");
+    const unit         = t("tokens");
 
     const cellLabel = 'style="padding:2px 6px;opacity:0.6"';
     const cellValue = 'style="padding:2px 6px"';
@@ -1230,14 +1166,15 @@ function updateStatusBar(statusBarItem, api, data, apiData, usageStats, overseas
 
   // ── Footer: expiry + updated time + refresh hint (right-aligned) ──
   // Use the user's local timezone for the "updated at" timestamp.
-  const updatedAt = new Date().toLocaleTimeString(isEn ? 'en-US' : 'zh-CN', {
+  const updatedAt = new Date().toLocaleTimeString(currentLanguage, {
     hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
-  const updatedLabel = isEn ? 'Updated' : '更新于';
+  const updatedLabel = t("updated");
   const expiryText = expiry
-    ? `${isEn ? 'Expiry' : '到期'}：${isEn ? translateExpiryText(expiry.text) : expiry.text}`
+    ? `${t("expiry")}: ${expiry.text}`
     : '';
-  const footerLine = [expiryText, `${updatedLabel} ${updatedAt}`, t.clickToRefresh].filter(Boolean).join(' · ');
+  const clickToRefresh = t("clickToRefresh");
+  const footerLine = [expiryText, `${updatedLabel} ${updatedAt}`, clickToRefresh].filter(Boolean).join(' · ');
   content += `<table width="100%" cellspacing="0" cellpadding="0"><tr>`;
   content += `<td align="right" style="opacity:0.55">${footerLine}</td>`;
   content += `</tr></table>`;

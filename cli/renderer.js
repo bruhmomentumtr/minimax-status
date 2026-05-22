@@ -5,7 +5,7 @@ const chalk = require('chalk').default;
 class Renderer {
   constructor() {
     this.RESET = '\x1b[0m';
-    // 自动检测：如果环境变量设置了 MINIMAX_PLAIN_UI 或者是 NO_NERD_FONTS，则停用特殊图标
+    // Auto-detect: disable special icons if MINIMAX_PLAIN_UI or NO_NERD_FONTS is set
     this.useNerdFonts = !process.env.MINIMAX_PLAIN_UI && !process.env.NO_NERD_FONTS;
     
     // 图标配置

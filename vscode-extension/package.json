@@ -1,7 +1,7 @@
 {
   "name": "minimax-status-vscode",
   "displayName": "MiniMax Status",
-  "description": "在 VS Code 状态栏显示 MiniMax Token-Plan 使用状态",
+  "description": "Display MiniMax Token-Plan usage status in VS Code status bar",
   "version": "1.3.3",
   "publisher": "JochenYang",
   "icon": "./public/icon.png",
@@ -20,15 +20,15 @@
     "commands": [
       {
         "command": "minimaxStatus.setup",
-        "title": "MiniMax Status: 配置向导",
+        "title": "MiniMax Status: Configuration Wizard",
         "category": "MiniMax",
-        "description": "配置 MiniMax 访问令牌"
+        "description": "Configure MiniMax access token"
       },
       {
         "command": "minimaxStatus.refresh",
-        "title": "MiniMax Status: 刷新状态",
+        "title": "MiniMax Status: Refresh Status",
         "category": "MiniMax",
-        "description": "手动刷新 MiniMax 状态"
+        "description": "Manually refresh MiniMax status"
       }
     ],
     "viewsContainers": {
@@ -44,7 +44,7 @@
       "minimaxStatusSidebar": [
         {
           "id": "minimaxStatusView",
-          "name": "设置"
+          "name": "Settings"
         }
       ]
     },
@@ -54,7 +54,7 @@
         "minimaxStatus.token": {
           "type": "string",
           "default": "",
-          "description": "MiniMax 访问令牌",
+          "description": "MiniMax access token",
           "order": 1
         },
         "minimaxStatus.groupId": {
@@ -66,53 +66,26 @@
         "minimaxStatus.refreshInterval": {
           "type": "number",
           "default": 30,
-          "description": "刷新间隔（秒）",
+          "description": "Refresh interval (seconds)",
           "order": 3
         },
         "minimaxStatus.showTooltip": {
           "type": "boolean",
           "default": true,
-          "description": "显示详细提示信息",
+          "description": "Show detailed tooltip",
           "order": 4
         },
         "minimaxStatus.modelName": {
           "type": "string",
           "default": "",
-          "description": "选择要显示的模型（留空则使用第一个模型）",
+          "description": "Model to display (leave empty for first model)",
           "order": 5
-        },
-        "minimaxStatus.overseasDisplay": {
-          "type": "string",
-          "enum": [
-            "none",
-            "overseas",
-            "both"
-          ],
-          "default": "none",
-          "description": "海外用量显示模式",
-          "order": 6
-        },
-        "minimaxStatus.overseasToken": {
-          "type": "string",
-          "default": "",
-          "description": "海外版 API Key",
-          "order": 7
-        },
-        "minimaxStatus.overseasGroupId": {
-          "type": "string",
-          "default": "",
-          "description": "海外版 group ID",
-          "order": 8
         },
         "minimaxStatus.language": {
           "type": "string",
-          "enum": [
-            "zh-CN",
-            "en-US"
-          ],
-          "default": "zh-CN",
-          "description": "Language / 语言",
-          "order": 9
+          "default": "en-US",
+          "description": "Language (en-US, tr-TR)",
+          "order": 6
         }
       }
     }

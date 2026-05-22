@@ -22,26 +22,26 @@ const renderer = new Renderer();
 
 program
   .name("minimax-status")
-  .description("MiniMax Claude Code 使用状态监控工具")
+  .description("MiniMax Claude Code usage monitoring tool")
   .version(packageJson.version);
 
-// Auth command (设置认证凭据)
+// Auth command (Configure credentials)
 program
   .command("auth")
-  .description("设置认证凭据")
-  .argument("<token>", "MiniMax 访问令牌")
-  .argument("[groupId]", "MiniMax 组 ID（已废弃，可不填）")
+  .description("Configure credentials")
+  .argument("<token>", "MiniMax access token")
+  .argument("[groupId]", "MiniMax Group ID (deprecated, optional)")
   .action((token, groupId) => {
     api.setCredentials(token, groupId || null);
-    console.log(chalk.green("✓ 认证信息已保存"));
+    console.log(chalk.green("✓ Authentication saved"));
   });
 
-// Health check command (检查配置和连接状态)
+// Health check command (Check configuration and connection status)
 program
   .command("health")
-  .description("检查配置和连接状态")
+  .description("Check configuration and connection status")
   .action(async () => {
-    const spinner = ora("正在检查...").start();
+    const spinner = ora("Checking...").start();
     let checks = {
       config: false,
       token: false,
@@ -49,7 +49,7 @@ program
       api: false,
     };
 
-    // 检查配置文件
+    // Check config file
     try {
       const configPath = require("path").join(
         process.env.HOME || process.env.USERPROFILE,
@@ -58,56 +58,56 @@ program
       if (require("fs").existsSync(configPath)) {
         checks.config = true;
       }
-      spinner.succeed("配置文件检查");
+      spinner.succeed("Config file check");
     } catch (error) {
-      spinner.fail("配置文件检查失败");
+      spinner.fail("Config file check failed");
     }
 
-    // 检查Token
+    // Check Token
     if (api.token) {
       checks.token = true;
-      console.log(chalk.green("✓ Token: ") + chalk.gray("已配置"));
+      console.log(chalk.green("✓ Token: ") + chalk.gray("configured"));
     } else {
-      console.log(chalk.red("✗ Token: ") + chalk.gray("未配置"));
+      console.log(chalk.red("✗ Token: ") + chalk.gray("not configured"));
     }
 
-    // 检查GroupID
+    // Check GroupID
     if (api.groupId) {
       checks.groupId = true;
-      console.log(chalk.green("✓ GroupID: ") + chalk.gray("已配置"));
+      console.log(chalk.green("✓ GroupID: ") + chalk.gray("configured"));
     } else {
-      console.log(chalk.red("✗ GroupID: ") + chalk.gray("未配置"));
+      console.log(chalk.red("✗ GroupID: ") + chalk.gray("not configured"));
     }
 
-    // 测试API连接
+    // Test API connection
     if (checks.token && checks.groupId) {
       try {
         await api.getUsageStatus();
         checks.api = true;
-        console.log(chalk.green("✓ API连接: ") + chalk.gray("正常"));
+        console.log(chalk.green("✓ API connection: ") + chalk.gray("OK"));
       } catch (error) {
-        console.log(chalk.red("✗ API连接: ") + chalk.gray(error.message));
+        console.log(chalk.red("✗ API connection: ") + chalk.gray(error.message));
       }
     }
 
-    // 总结
-    console.log("\n" + chalk.bold("健康检查结果:"));
+    // Summary
+    console.log("\n" + chalk.bold("Health Check Result:"));
     const allPassed = Object.values(checks).every((v) => v);
     if (allPassed) {
-      console.log(chalk.green("✓ 所有检查通过，配置正常！"));
+      console.log(chalk.green("✓ All checks passed, configuration is OK!"));
     } else {
-      console.log(chalk.yellow("⚠ 发现问题，请检查上述错误信息"));
+      console.log(chalk.yellow("⚠ Issues found, please check the errors above"));
     }
   });
 
-// Status command (显示当前使用状态)
+// Status command (Show current usage status)
 program
   .command("status")
-  .description("显示当前使用状态")
-  .option("-c, --compact", "紧凑模式显示")
-  .option("-w, --watch", "实时监控模式")
+  .description("Show current usage status")
+  .option("-c, --compact", "Compact display mode")
+  .option("-w, --watch", "Real-time monitoring mode")
   .action(async (options) => {
-    const spinner = ora("获取使用状态中...").start();
+    const spinner = ora("Fetching usage status...").start();
 
     try {
       const [apiData, subscriptionData] = await Promise.all([
@@ -116,10 +116,10 @@ program
       ]);
       const usageData = api.parseUsageData(apiData, subscriptionData);
 
-      // 获取账单数据用于消耗统计
+      // Get billing data for usage statistics
       let usageStats = null;
       try {
-        // 按自然月统计当月消耗
+        // Monthly statistics
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime();
         const billingRecords = await api.getAllBillingRecords(100, monthStart);
@@ -127,40 +127,38 @@ program
           usageStats = api.calculateUsageStats(billingRecords, monthStart, now.getTime());
         }
       } catch (billingError) {
-        // 账单数据获取失败不影响主要功能
-        console.error(chalk.gray(`消耗统计获取失败: ${billingError.message}`));
+        console.error(chalk.gray(`Failed to fetch usage stats: ${billingError.message}`));
       }
 
       const statusBar = new StatusBar(usageData, usageStats, api);
       const allModels = api.parseAllModels(apiData);
 
-      spinner.succeed("状态获取成功");
+      spinner.succeed("Status fetched successfully");
 
       if (options.compact) {
         console.log(statusBar.renderCompact());
       } else {
-        // 将 allModels 传入 StatusBar 内部渲染
         const statusBarWithModels = new StatusBar(usageData, usageStats, api, allModels);
         console.log("\n" + statusBarWithModels.render() + "\n");
       }
 
       if (options.watch) {
-        console.log(chalk.gray("监控中... 按 Ctrl+C 退出"));
+        console.log(chalk.gray("Monitoring... Press Ctrl+C to exit"));
         startWatching(api, statusBar);
       }
     } catch (error) {
-      spinner.fail(chalk.red("获取状态失败"));
-      console.error(chalk.red(`错误: ${error.message}`));
+      spinner.fail(chalk.red("Failed to fetch status"));
+      console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
     }
   });
 
-// List command (显示所有模型的使用状态)
+// List command (Show all models usage status)
 program
   .command("list")
-  .description("显示所有模型的使用状态")
+  .description("Show all models usage status")
   .action(async () => {
-    const spinner = ora("获取使用状态中...").start();
+    const spinner = ora("Fetching usage status...").start();
 
     try {
       const [apiData, subscriptionData] = await Promise.all([
@@ -170,30 +168,30 @@ program
       const usageData = api.parseUsageData(apiData, subscriptionData);
       const allModels = api.parseAllModels(apiData);
 
-      spinner.succeed("状态获取成功");
+      spinner.succeed("Status fetched successfully");
       const statusBarWithModels = new StatusBar(usageData, null, null, allModels);
       console.log("\n" + statusBarWithModels.render() + "\n");
     } catch (error) {
-      spinner.fail(chalk.red("获取状态失败"));
-      console.error(chalk.red(`错误: ${error.message}`));
+      spinner.fail(chalk.red("Failed to fetch status"));
+      console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
     }
   });
 
-// StatusBar command (持续显示在终端底部)
+// StatusBar command (Persistent display at terminal bottom)
 program
   .command("bar")
-  .description("在终端底部持续显示状态栏")
+  .description("Continuously display status bar at terminal bottom")
   .action(async () => {
     const TerminalStatusBar = require("./statusbar");
     const statusBar = new TerminalStatusBar();
     await statusBar.start();
   });
 
-// Statusline command - 单次输出模式（Claude Code自己控制刷新）
+// Statusline command - Single output mode (Claude Code controls refresh)
 program
   .command("statusline")
-  .description("Claude Code状态栏集成（从stdin读取数据，单次输出）")
+  .description("Claude Code status bar integration (read from stdin, single output)")
   .action(async () => {
     let stdinData = null;
     if (!process.stdin.isTTY) {
